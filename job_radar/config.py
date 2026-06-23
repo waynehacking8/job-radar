@@ -30,7 +30,8 @@ def split_env(name, default):
 # the whole board and we filter client-side.)
 SEARCH_TERMS = split_env(
     "JOB_RADAR_SEARCH_TERMS",
-    "machine learning,deep learning,LLM,GPU,inference,CUDA,PyTorch,MLOps",
+    "machine learning,deep learning,LLM,GPU,inference,CUDA,PyTorch,MLOps,"
+    "AI engineer,data scientist,algorithm,computer vision,generative AI,NLP",
 )
 
 # Location gate — Taiwan only (the user's stated scope). A posting must match this
@@ -48,12 +49,14 @@ LOCATION_RE = re.compile(
 STRONG_RE = re.compile(
     r"\bLLM\b|large language model|\bGPU\b|CUDA|tensor[\s-]?core|kernel|TensorRT|vLLM|"
     r"\bNCCL\b|inference|serving|quantization|model optimization|deep learning|"
+    r"\bRAG\b|multimodal|diffusion|reinforcement learning|speculative decoding|"
     r"機器學習|深度學習|推論|大型語言模型",
     re.I,
 )
 MEDIUM_RE = re.compile(
-    r"machine learning|\bML\b|\bAI\b|\bMLOps\b|PyTorch|TensorFlow|演算法|algorithm|"
-    r"computer vision|\bNLP\b|人工智慧|model",
+    r"machine learning|\bML\b|\bAI\b|\bMLOps\b|\bLLMOps\b|PyTorch|TensorFlow|JAX|"
+    r"演算法|algorithm|computer vision|\bNLP\b|人工智慧|model|data scien|recommendation|"
+    r"embedding|transformer|neural|generative|fine[\s-]?tun|\bagent\b|語音|影像|推薦",
     re.I,
 )
 # Hard excludes — drop even on a keyword hit. Sales/HR/finance/pure-fab roles that
