@@ -1,0 +1,68 @@
+name: job-radar
+
+# Fetches NEW Taiwan ML/LLM/GPU openings from Workday/Greenhouse/Lever, emails a
+# ranked digest, commits a browsable copy to digests/, and persists the de-dup
+# memory in state/ so you never see the same posting twice.
+#
+# One-time setup — Repo → Settings → Secrets and variables → Actions → add:
+#   GMAIL_USER          your gmail address     (required for email)
+#   GMAIL_APP_PASSWORD  a Gmail App Password    (required for email)
+#   EMAIL_TO            recipient               (optional — defaults to GMAIL_USER)
+
+on:
+  schedule:
+    # Multi-window FALLBACK: GitHub cron lags/drops fires, so fire every 30 min
+    # across 01:00–07:30 UTC (09:00–15:30 Taipei). The daily sentinel
+    # (state/last-run, checked in cli.main) makes every fire after the first of
+    # the day a no-op — one digest/day; the extra fires just guarantee one lands.
+    - cron: "*/30 1-7 * * *"
+  workflow_dispatch: {}
+
+permissions:
+  contents: write
+
+concurrency:                 # a late fire must not overlap the next (double email + push race)
+  group: job-radar
+  cancel-in-progress: false
+
+jobs:
+  radar:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0     # full history so the pre-push rebase has a real merge base
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Fetch openings + email digest
+        env:
+          SMTP_HOST: smtp.gmail.com
+          SMTP_PORT: "587"
+          SMTP_USER: ${{ secrets.GMAIL_USER }}
+          SMTP_PASS: ${{ secrets.GMAIL_APP_PASSWORD }}
+          EMAIL_TO: ${{ secrets.EMAIL_TO }}
+          JOB_RADAR_HOME: state          # de-dup memory -> state/seen.json
+          JOB_RADAR_DIGEST_DIR: digests   # browsable archive -> digests/*.md
+        run: python radar.py
+
+      - name: Commit digest archive + de-dup memory
+        run: |
+          git config user.name "job-radar[bot]"
+          git config user.email "actions@users.noreply.github.com"
+          git add -f digests/ state/
+          git commit -m "radar: digest for $(date -u +%F)" || { echo "nothing new"; exit 0; }
+          # Rebase before push so a concurrent fire doesn't fail on non-fast-forward.
+          # seen.json is single-line JSON (can't 3-way merge) -> -X theirs takes this
+          # run's version (last-writer-wins is fine for a de-dup cache).
+          for i in 1 2 3 4 5; do
+            if git pull --rebase --autostash -X theirs origin "${GITHUB_REF_NAME}" && git push; then
+              exit 0
+            fi
+            git rebase --abort 2>/dev/null || true
+            echo "push race — retry $i/5…"; sleep $((i * 2))
+          done
+          echo "push failed after retries"; exit 1
