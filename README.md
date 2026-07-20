@@ -1,11 +1,14 @@
 # job-radar
 
+> **Automation paused (2026-07-21).** The GitHub Actions delivery workflow is
+> disabled and has no scheduled trigger. The collector remains available for
+> explicit local use or a future intentional restart.
+
 [![CI](https://github.com/waynehacking8/job-radar/actions/workflows/ci.yml/badge.svg)](https://github.com/waynehacking8/job-radar/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
-**A daily email digest of NEW Taiwan ML / LLM / GPU job openings — pulled from the ATS APIs your
-target employers actually run on, not from LinkedIn scraping.** Runs on GitHub Actions; you never
-see the same posting twice.
+**An on-demand digest of NEW Taiwan ML / LLM / GPU job openings — pulled from the ATS APIs your
+target employers actually run on, not from LinkedIn scraping.**
 
 > Sibling of [`gh-radar`](https://github.com/waynehacking8/gh-radar) (trending GitHub tools). Same
 > shape — isolated sources → de-dup memory → ranked digest → email — pointed at the job market.
@@ -22,7 +25,7 @@ same way gh-radar skips the X API. A LinkedIn *Job Alert* covers those by email.
 ## How it works
 
 ```
-GitHub Actions cron (multi-window)
+Manual invocation (automation paused)
         |
         v
   collect()  ── Workday CXS ┐
@@ -50,7 +53,7 @@ _14 new Taiwan ML / LLM / GPU openings via Greenhouse, Workday._
 ...
 ```
 
-## Setup (GitHub Actions)
+## GitHub Actions (paused)
 
 Fork/clone, then add repo **Settings → Secrets and variables → Actions**:
 
@@ -60,9 +63,10 @@ Fork/clone, then add repo **Settings → Secrets and variables → Actions**:
 | `GMAIL_APP_PASSWORD` | a Gmail **App Password** (needs 2FA) — not your login password |
 | `EMAIL_TO` | where to send the digest (defaults to `GMAIL_USER` if unset) |
 
-The cron (`.github/workflows/radar.yml`) fires several windows a day; a daily sentinel makes every
-fire after the first a no-op, so you get **one digest/day**. The browsable archive lands in
-`digests/`, the de-dup memory in `state/seen.json` — both committed back by the job.
+`.github/workflows/radar.yml` is disabled in GitHub Actions and deliberately has
+no `schedule` trigger. If the project is intentionally restarted, its retained
+manual workflow writes the browsable archive to `digests/` and de-dup memory to
+`state/seen.json`.
 
 ### Run locally
 

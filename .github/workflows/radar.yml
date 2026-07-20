@@ -1,8 +1,8 @@
 name: job-radar
 
-# Fetches NEW Taiwan ML/LLM/GPU openings from Workday/Greenhouse/Lever, emails a
-# ranked digest, commits a browsable copy to digests/, and persists the de-dup
-# memory in state/ so you never see the same posting twice.
+# PAUSED: the workflow is disabled in GitHub Actions and has no automatic
+# trigger. workflow_dispatch is retained as a recovery path if the project is
+# intentionally re-enabled later.
 #
 # One-time setup — Repo → Settings → Secrets and variables → Actions → add:
 #   GMAIL_USER          your gmail address     (required for email)
@@ -10,12 +10,6 @@ name: job-radar
 #   EMAIL_TO            recipient               (optional — defaults to GMAIL_USER)
 
 on:
-  schedule:
-    # Multi-window FALLBACK: GitHub cron lags/drops fires, so fire every 30 min
-    # across 01:00–07:30 UTC (09:00–15:30 Taipei). The daily sentinel
-    # (state/last-run, checked in cli.main) makes every fire after the first of
-    # the day a no-op — one digest/day; the extra fires just guarantee one lands.
-    - cron: "*/30 1-7 * * *"
   workflow_dispatch: {}
 
 permissions:
